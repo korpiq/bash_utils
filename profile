@@ -3,7 +3,7 @@ SHELL_UTILS_DIR=$(cd -- $(dirname $(readlink "$BASH_SOURCE")); pwd)
 for PATH_DIR in "$HOME/bin" "$HOME/.local/bin" "$SHELL_UTILS_DIR/bin"
 do
     echo ":$PATH:" | grep -q ":$PATH_DIR:" ||
-        ls -l "$PATH_DIR" | egrep -q '^[^d]\S+x' &&
+        [ -d "$PATH_DIR" ] && ls -l "$PATH_DIR" | egrep -q '^[^d]\S+x' &&
         export PATH="$PATH_DIR:$PATH"
 done
 
