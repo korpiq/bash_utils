@@ -1,0 +1,10 @@
+#!/bin/bash
+
+THIS_DIR=$(cd $(dirname "$BASH_SOURCE"); pwd)
+
+TARGET="$HOME/.bash_profile"
+
+[ -e "$TARGET" ] && mv "$TARGET" "$THIS_DIR/source/local_profile"
+ln -s "$THIS_DIR/profile" "$TARGET"
+
+mkdir -p -m 0700 "$HOME/.history"
