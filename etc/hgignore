@@ -1,0 +1,10 @@
+syntax: glob
+
+*~
+.DS_Store
+.idea/**
+__pycache__
+
+syntax: regexp
+
+[^/]*.iml
