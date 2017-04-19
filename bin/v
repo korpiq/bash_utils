@@ -1,0 +1,66 @@
+#!/bin/bash
+
+version_control_info_from_full_dirname () {
+    local glob_match
+    for glob_match in "$1"/.{hg,git}
+    do
+        if [ -d "$glob_match" ]
+        then
+            [ -n "$root" ] && echo "$1"
+            [ -n "$system" ] && echo "${glob_match/*.}"
+            return 0
+        fi
+    done
+    [ "$1" = "/" ] && return 1
+    version_control_info_from_full_dirname "$(dirname "$1")"
+}
+
+version_control_info () {
+    version_control_info_from_full_dirname "$(cd -- "$1"; pwd)"
+}
+
+version_control_system() {
+    local system=1 root=
+    version_control_info "${1:-$PWD}"
+}
+
+version_control_subcommand_expand () {
+    case "$1-$2" in
+        *-pl|*-l) echo pull
+           ;;
+        *-ps|*-s) echo push
+           ;;
+        *-ci|*-i) echo commit
+           ;;
+        *-co|*-o) echo checkout
+           ;;
+        *-st|*-) echo status
+           ;;
+        *-am) echo commit --amend
+           ;;
+        *-a) echo add
+           ;;
+        *-d) echo diff
+           ;;
+	git-r) echo checkout -- $(git status | perl -wne 's/^\s+\w+:\s+// and print')
+	   ;;
+	hg-r) echo revert --all
+	   ;;
+        *) echo "$2"
+    esac
+}
+
+v () {
+    local subcommand="$1" system=$(version_control_system) show_v=${show_v:+echo}
+    shift
+    if [ -n "$system" ]
+    then
+        $show_v $system $(version_control_subcommand_expand $system $subcommand) "$@"
+    else
+        echo "No version control system here" >&2
+        return 2
+    fi
+}
+
+[ "$0" == "$BASH_SOURCE" ] && v "$@"
+

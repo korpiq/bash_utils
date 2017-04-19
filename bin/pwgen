@@ -1,0 +1,1 @@
+perl -we 'use Digest::MD5 qw(md5_base64); open F, "/dev/random"; my $r; read F, $r, 80; print md5_base64($r), "\n"'

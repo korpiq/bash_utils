@@ -1,0 +1,30 @@
+#!/bin/bash
+
+for DIRECTORY in . "$1" "$HOME/$1"
+do
+    if [ -n "$DIRECTORY" -a -f "$DIRECTORY/Vagrantile" ]
+    then
+        cd -- "$DIRECTORY"
+        [ "$DIRECTORY" = "." ] || shift
+        break
+    fi
+done
+echo "$0 in $PWD"
+
+get_status () {
+	vagrant status --machine-readable | sed -ne 's/.*,state,//p'
+}
+
+ensure_running () {
+	case "$(get_status)" in
+		running)	return 0
+				;;
+		suspended)	vagrant resume
+				;;
+		*)		vagrant up
+				;;
+	esac
+}
+
+ensure_running && vagrant ssh -- "$@"
+
