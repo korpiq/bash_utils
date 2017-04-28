@@ -4,7 +4,12 @@ THIS_DIR=$(cd $(dirname "$BASH_SOURCE"); pwd)
 
 TARGET="$HOME/.bash_profile"
 
-[ -e "$TARGET" ] && mv "$TARGET" "$THIS_DIR/source/local_profile"
-ln -s "$THIS_DIR/profile" "$TARGET"
+[ -f "$TARGET" ] && mv "$TARGET" "$THIS_DIR/source/local_profile"
+
+for FILE in "$THIS_DIR/home/"*
+do
+	TARGET="$HOME/$(basename "$FILE" | sed 's/^dot\././')"
+	[ -e "$TARGET" ] || ln -vs "$FILE" "$TARGET"
+done
 
 mkdir -p -m 0700 "$HOME/.history"
