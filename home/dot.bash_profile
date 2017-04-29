@@ -1,4 +1,4 @@
-SHELL_UTILS_DIR=$(cd -- $(dirname $(readlink "$BASH_SOURCE")); pwd)
+SHELL_UTILS_DIR=$(cd -- $(dirname $(dirname $(readlink "$BASH_SOURCE"))); pwd)
 
 for PATH_DIR in "$HOME/bin" "$HOME/.local/bin" "$SHELL_UTILS_DIR/bin"
 do
