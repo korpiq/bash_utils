@@ -2,14 +2,15 @@ SHELL_UTILS_DIR=$(cd -- $(dirname $(dirname $(readlink "$BASH_SOURCE"))); pwd)
 
 for PATH_DIR in "$HOME/bin" "$HOME/.local/bin" "$SHELL_UTILS_DIR/bin"
 do
+    # only add directories not yet in PATH and containing executables
     echo ":$PATH:" | grep -q ":$PATH_DIR:" ||
         [ -d "$PATH_DIR" ] && ls -l "$PATH_DIR" | egrep -q '^[^d]\S+x' &&
         export PATH="$PATH_DIR:$PATH"
 done
 
-for SOURCE_FILE in "$SHELL_UTILS_DIR/source"/*
+for SOURCE_FILE in "$SHELL_UTILS_DIR/source"/* "$HOME/bin/"*/*.bash.inc
 do
-    . "$SOURCE_FILE"
+    [ -e "$SOURCE_FILE" ] && source "$SOURCE_FILE"
 done
 
 export HISTFILESIZE=262144
