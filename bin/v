@@ -25,28 +25,36 @@ version_control_system() {
 }
 
 version_control_subcommand_expand () {
-    case "$1-$2" in
-        *-pl|*-l) echo pull
+    local system="$1"
+    local subcommand="${2:-status}"
+    shift 2
+    case "$subcommand" in
+        pl|l) echo pull
            ;;
-        *-ps|*-s) echo push
+        ps|s) echo push
            ;;
-        *-commit|*-ci|*-i) echo commit $( [ "$1 $2 $3" = "$*" ] && echo -m ) # 1 arg = comment
+        commit|ci|i) echo commit $( [ "$1" = "$*" ] && echo -m ) # 1 arg = message
            ;;
-        *-co|*-o) echo checkout
+        co|o) echo checkout
            ;;
-        *-st|*-) echo status
+        st) echo status
            ;;
-        *-am) echo commit --amend
+        am) echo commit --amend
            ;;
-        *-a) echo add
+        a) echo add
            ;;
-        *-d) echo diff
+        d) echo diff
            ;;
-	git-r) echo checkout -- $(git status | perl -wne 's/^\s+\w+:\s+// and print')
+	r) case "$system" in
+		git) echo checkout -- $(git status | perl -wne 's/^\s+\w+:\s+// and print')
+   		   ;;
+                hg) echo revert --all
+		   ;;
+		*) echo "Not known how to revert in $1" >&2; exit 1
+		   ;;
+	   esac
 	   ;;
-	hg-r) echo revert --all
-	   ;;
-        *) echo "$2"
+        *) echo "$subcommand"
     esac
 }
 
