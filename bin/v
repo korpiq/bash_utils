@@ -30,7 +30,7 @@ version_control_subcommand_expand () {
            ;;
         *-ps|*-s) echo push
            ;;
-        *-ci|*-i) echo commit
+        *-commit|*-ci|*-i) echo commit $( [ "$1 $2 $3" = "$*" ] && echo -m ) # 1 arg = comment
            ;;
         *-co|*-o) echo checkout
            ;;
@@ -55,7 +55,7 @@ v () {
     shift
     if [ -n "$system" ]
     then
-        $show_v $system $(version_control_subcommand_expand $system $subcommand) "$@"
+        $show_v $system $(version_control_subcommand_expand "$system" "$subcommand" "$@") "$@"
     else
         echo "No version control system here" >&2
         return 2
