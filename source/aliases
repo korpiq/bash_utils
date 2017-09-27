@@ -7,6 +7,7 @@ alias act='echo */bin/activate | grep -qv "*" && . */bin/activate; if [ -d node_
 alias ald='alias < ~/.bash_utils/source/aliases'
 alias asv='alias > ~/.bash_utils/source/aliases'
 alias ci='v commit'
+alias co='v checkout'
 alias deact='echo */bin/deactivate | grep -qv "*" && . */bin/deactivate; export PATH=$(echo ":$PATH" | sed "s#:$PWD/[^:]*:#:#g; s#^:##") PS1=$(echo "$PS1" | sed "s#$(basename "$PWD") *##")'
 alias i='v i'
 alias java7='echo "$PATH" | grep -q jdk1.7 || export PATH="/Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home/bin:$PATH"'
