@@ -1,0 +1,9 @@
+pdfcompress() {
+    if [ -z "$2" ]
+    then
+        echo "Usage: $0 infile outfile [screen*|ebook|printer|prepress]" >&2
+        return 1
+    fi
+    gs -sDEVICE=pdfwrite -dNOPAUSE -dQUIET -dBATCH -dPDFSETTINGS=/${3:-screen} -dCompatibilityLevel=1.4 -sOutputFile="$2" "$1"
+}
+
