@@ -26,7 +26,7 @@ history_rewrite () {
 	# delay history loading to avoid timestamp mangling bug in bash 3.2
 	export PROMPT_COMMAND='
 		history -c; history -r "$HOME/.bash_history";
-		export PROMPT_COMMAND="history -a'$(echo ";$PROMPT_COMMAND;"|sed "s/; *history -a *;/;/; s/;;*/;/g")'"
+		export PROMPT_COMMAND="'$(echo "history -a; $PROMPT_COMMAND"|sed "s/; *history -a *;/;/; s/;;*/;/g")'"
 	'
 }
 
