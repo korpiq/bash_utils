@@ -18,7 +18,9 @@ export HISTSIZE=64738
 export HISTTIMEFORMAT="%F-%T "
 mkdir -p -m 0700 "$HOME/.history"
 # keep only a bunch of the latest history files:
-ls -t "$HOME/.history/bash_history-"* | tail +500 | xargs rm
+#bash_history_sort.pl --comment --delete $(
+#    ls -t "$HOME/.history/bash_history-"* | grep -v '/bash_history-0' | tail +100 | tail -n 10
+#) >> "$HOME/.history/bash_history-0"
 
 history_rewrite () {
 	# combine histories:
@@ -26,7 +28,7 @@ history_rewrite () {
 	# delay history loading to avoid timestamp mangling bug in bash 3.2
 	export PROMPT_COMMAND='
 		history -c; history -r "$HOME/.bash_history";
-		export PROMPT_COMMAND="'$(echo "history -a; $PROMPT_COMMAND"|sed "s/; *history -a *;/;/; s/;;*/;/g")'"
+		export PROMPT_COMMAND="history -a'$(echo ";$PROMPT_COMMAND;"|sed "s/; *history -a *;/;/; s/;;*/;/g")'"
 	'
 }
 

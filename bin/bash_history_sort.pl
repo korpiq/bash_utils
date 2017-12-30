@@ -3,6 +3,8 @@
 # Outputs all unique history entries in timestamp order.
 
 use strict;
+use Getopt::Long;
+use vars qw($comment $delete);
 
 sub debug {
 	warn "@_\n" if $ENV{DEBUG_BASH_HISTORY};
@@ -83,5 +85,10 @@ sub bash_history_sort {
 
 ### MAIN
 
+GetOptions(
+	'comment!' => \$comment,
+	'delete!' => \$delete,
+	'help' => sub { HelpMessage() }
+);
 bash_history_sort(@ARGV);
 
