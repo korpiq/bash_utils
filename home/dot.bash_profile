@@ -17,10 +17,6 @@ export HISTFILESIZE=262144
 export HISTSIZE=64738
 export HISTTIMEFORMAT="%F-%T "
 mkdir -p -m 0700 "$HOME/.history"
-# keep only a bunch of the latest history files:
-#bash_history_sort.pl --comment --delete $(
-#    ls -t "$HOME/.history/bash_history-"* | grep -v '/bash_history-0' | tail +100 | tail -n 10
-#) >> "$HOME/.history/bash_history-0"
 
 history_rewrite () {
 	# combine histories:
