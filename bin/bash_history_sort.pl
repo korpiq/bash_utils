@@ -1,94 +1,85 @@
 #!/usr/bin/env perl -w
 
-# Outputs all unique history entries in timestamp order.
-
 use strict;
-use Getopt::Long;
-use vars qw($comment $delete);
 
-sub debug {
-	warn "@_\n" if $ENV{DEBUG_BASH_HISTORY};
+if (@ARGV < 1)
+{
+    die "Usage: $0 bash_history_filename[-session.id] ...\n" .
+        "Outputs bash history of commands with timestamps from input files in timestamp order\n"
 }
 
-sub read_row ($) {
-	my $file = shift;
-	my $row = readline $file->{handle} || '';
-	++$file->{$row ? 'rows_read' : 'finished'};
-	return $row;
+my $timestamp = 0;
+my $next_timestamp = 0;
+my $sessionid = "";
+my $filename = "";
+my $command = "";
+my %all_commands = (); # map from timestamps to sessionids each with a list of commands there then
+my $row = "";
+
+sub get_timestamp () {
+    return $row =~ /^#(\d{10})$/ ? $1 : 0;
 }
 
-sub timestamped_entry_reader ($$) {
-	my ($file, $row) = @_;
-	return (
-		($row =~ /^#(\d+)$/, $file->{rows_read})[0],
-		read_row $file
-	);
+sub add_command () {
+    return unless $command;
+
+    my $moment = $all_commands{$timestamp} ||= {};
+    my $session_commands = $moment->{$sessionid} ||= [];
+
+    push @{$session_commands}, $command;
+
+    $command = "";
 }
 
-sub timestampless_entry_reader ($$) {
-	my ($file, $row) = @_;
-	return ($file->{rows_read}, $row);
+### read commands from all input files with optional timestamps
+
+while(<>)
+{
+    $row = $_;
+
+    if ($ARGV ne $filename) # started reading next file
+    {
+        add_command();
+
+        $filename = $ARGV;
+        $sessionid = $filename =~ /-(\d+.*)/ ? $1 : "";
+        $timestamp = get_timestamp();
+    }
+    
+    if (not $timestamp) # pass through every line of non-timestamped input file
+    {
+        $command = $row;
+        add_command();
+    }
+    elsif ($next_timestamp = get_timestamp()) # came across a timestamp row
+    {
+        add_command();
+        $timestamp = $next_timestamp;
+    }
+    else # collect rows between timestamps together as the command
+    {
+        $command .= $row;
+    }
 }
 
-sub first_entry_reader ($$) {
-	my ($file, $row) = @_;
-	if ($row =~ /^#(\d+)$/) {
-		$file->{reader} = \&timestamped_entry_reader;
-		return ($1, read_row $file);
-	} else {
-		$file->{reader} = \&timestampless_entry_reader;
-		return (1, $row);
-	}
+add_command();
+
+### output commands in order by timestamps with them and session ids from input filenames
+
+for $timestamp (sort { $a <=> $b } keys %all_commands)
+{
+    my $moment = $all_commands{$timestamp};
+
+    for $sessionid (sort keys %$moment)
+    {
+        my $session_commands = $moment->{$sessionid};
+        my $comment = $sessionid ? " # $sessionid" : "";
+
+        for $command (@$session_commands)
+        {
+            chomp($command);
+            print "#$timestamp\n$command$comment\n";
+        }
+    }
 }
-
-sub read_entry ($) {
-	my $file = shift;
-	($file->{timestamp}, $file->{command}) = $file->{reader}->($file, read_row $file);
-}
-
-sub oldest_file {
-	my $oldest = shift;
-	for my $file (@_) {
-		$oldest = $file if $file->{timestamp} < $oldest->{timestamp};
-	}
-	return $oldest;
-}
-
-sub bash_history_sort {
-	my %files;
-	for(@_) {
-		debug "Open $_";
-		my $file = {
-			name => $_,
-			finished => 0,
-			reader => \&first_entry_reader
-		};
-		open $file->{handle}, $_;
-		read_entry $file;
-		$files{$_} = $file;
-	};
-
-	my $last_command = '';
-	while(keys %files) {
-		my $file = oldest_file(values %files);
-		debug "Oldest: $file->{name}: $file->{timestamp}: $file->{command}";
-		printf "#%d\n%s", $file->{timestamp}, $file->{command}
-			unless $file->{command} eq $last_command;
-		if ($file->{finished}) {
-			debug "Finished $file->{name}";
-			delete $files{$file->{name}};
-		} else {
-			read_entry $file;
-		}
-	}
-}
-
-### MAIN
-
-GetOptions(
-	'comment!' => \$comment,
-	'delete!' => \$delete,
-	'help' => sub { HelpMessage() }
-);
-bash_history_sort(@ARGV);
 
