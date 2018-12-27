@@ -24,37 +24,50 @@ version_control_system() {
     version_control_info "${1:-$PWD}"
 }
 
+get_github_repo_url() {
+    git remote -v | perl -wne '
+        /\s+git\@(.*?):(.*?)\.git / and print "https://$1/$2\n" and exit 0
+    '
+}
+
 version_control_subcommand_expand () {
     local system="$1"
     local subcommand="${2:-status}"
     shift 2
     case "$subcommand" in
-        pl|l) echo pull
+        pl|l) echo $system pull
            ;;
-        ps|s) echo push
+        ps|s) echo $system push
            ;;
-        commit|ci|i) echo commit $( [ "$1" = "$*" ] && echo -m ) # 1 arg = message
+        commit|ci|i) echo $system commit $( [ "${1/^-/}" = "$*" ] && echo -m ) # 1 arg not -option = message
            ;;
-        co|o) echo checkout
+        co|o) echo $system checkout
            ;;
-        st) echo status
+        st) echo $system status
            ;;
-        am) echo commit --amend
+        am) echo $system commit --amend
            ;;
-        a) echo add
+        a) echo $system add
            ;;
-        d) echo diff
+        d) echo $system diff
            ;;
-	r) case "$system" in
-		git) echo checkout -- $(git status | perl -wne 's/^\s+\w+:\s+// and print')
-   		   ;;
-                hg) echo revert --all
-		   ;;
-		*) echo "Not known how to revert in $1" >&2; exit 1
-		   ;;
-	   esac
-	   ;;
-        *) echo "$subcommand"
+        w) case "$system" in
+                git) echo open $(get_github_repo_url) 
+                ;;
+                *) echo "Not known how to spot remote url in $system" >&2; exit 1
+                ;;
+           esac
+           ;;
+        r) case "$system" in
+                git) echo $system checkout -- $(git status | perl -wne 's/^\s+\w+:\s+// and print')
+                ;;
+                hg) echo $system revert --all
+                ;;
+                *) echo "Not known how to revert in $1" >&2; exit 1
+                ;;
+           esac
+           ;;
+        *) echo $system "$subcommand"
     esac
 }
 
@@ -63,7 +76,7 @@ v () {
     shift
     if [ -n "$system" ]
     then
-        $show_v $system $(version_control_subcommand_expand "$system" "$subcommand" "$@") "$@"
+        $show_v $(version_control_subcommand_expand "$system" "$subcommand" "$@") "$@"
     else
         echo "No version control system here" >&2
         return 2
