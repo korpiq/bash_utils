@@ -37,3 +37,8 @@ touch "$HISTFILE"
 history_rewrite
 
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
+
+[ -f /usr/local/etc/bash_completion ] && . /usr/local/etc/bash_completion
+which kubectl 2>&1 >/dev/null && source <(kubectl completion bash)
+[ -d "$HOME/.nvm" ] && export NVM_DIR="$HOME/.nvm"
+[ -f "/usr/local/opt/nvm/nvm.sh" ] && . "/usr/local/opt/nvm/nvm.sh"
