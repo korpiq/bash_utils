@@ -10,10 +10,9 @@ if (@ARGV < 1)
 
 my $timestamp = 0;
 my $next_timestamp = 0;
-my $sessionid = "";
 my $filename = "";
 my $command = "";
-my %all_commands = (); # map from timestamps to sessionids each with a list of commands there then
+my %all_commands = (); # map from timestamps to a list of commands
 my $row = "";
 
 sub get_timestamp () {
@@ -23,10 +22,8 @@ sub get_timestamp () {
 sub add_command () {
     return unless $command;
 
-    my $moment = $all_commands{$timestamp} ||= {};
-    my $session_commands = $moment->{$sessionid} ||= [];
-
-    push @{$session_commands}, $command;
+    my $moment = $all_commands{$timestamp} ||= [];
+    push @{$moment}, $command;
 
     $command = "";
 }
@@ -39,10 +36,9 @@ while(<>)
 
     if ($ARGV ne $filename) # started reading next file
     {
-        add_command();
+        add_command(); # flush last command collected from previous file
 
         $filename = $ARGV;
-        $sessionid = $filename =~ /-(\d+.*)/ ? $1 : "";
         $timestamp = get_timestamp();
     }
     
@@ -62,24 +58,17 @@ while(<>)
     }
 }
 
-add_command();
+add_command(); # flush last command collected from last file
 
-### output commands in order by timestamps with them and session ids from input filenames
+### output commands in order by timestamps with them
 
 for $timestamp (sort { $a <=> $b } keys %all_commands)
 {
     my $moment = $all_commands{$timestamp};
 
-    for $sessionid (sort keys %$moment)
+    for $command (@$moment)
     {
-        my $session_commands = $moment->{$sessionid};
-        my $comment = $sessionid ? " # $sessionid" : "";
-
-        for $command (@$session_commands)
-        {
-            chomp($command);
-            print "#$timestamp\n$command$comment\n";
-        }
+        print "#$timestamp\n$command";
     }
 }
 
