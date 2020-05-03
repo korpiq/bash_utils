@@ -73,7 +73,7 @@ version_control_subcommand_expand () {
 
 v () {
     local subcommand="$1" system=$(version_control_system) show_v=${show_v:+echo}
-    shift
+    [ -n "$subcommand" ] && shift
     if [ -n "$system" ]
     then
         $show_v $(version_control_subcommand_expand "$system" "$subcommand" "$@") "$@"
@@ -83,5 +83,7 @@ v () {
     fi
 }
 
-[ "$0" == "$BASH_SOURCE" ] && v "$@"
+'+' () { v a "$@"; }
+
+[ "$0" = "$BASH_SOURCE" ] && v "$@"
 
