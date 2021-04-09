@@ -26,8 +26,25 @@ version_control_system() {
 
 get_github_repo_url() {
     git remote -v | perl -wne '
-        /\s+git\@(.*?):(.*?)\.git / and print "https://$1/$2\n" and exit 0
+        m{\bgit\@([^:/]*?)[:/](.*?)\.git } and print "https://$1/$2\n" and exit 0
     '
+}
+
+git_faff() {
+    git fetch --all;
+    git branch --format '%(refname) %(upstream)' |
+        sed -ne 's!^refs/heads/\([^ ]*\) refs/remotes/\([^/]*\)/\(.*\)!\1 \2 \3!p' |
+        grep -v "^$(git branch | sed -ne 's/^\* //p') " |
+        while read LOCAL_BRANCH REMOTE REMOTE_BRANCH
+        do 
+        if ! (
+            set -x;
+            git fetch $REMOTE $REMOTE_BRANCH:$LOCAL_BRANCH
+        )
+        then
+            [ "$1" = "--delete-missing" ] && git branch -d $LOCAL_BRANCH
+        fi
+        done
 }
 
 version_control_subcommand_expand () {
@@ -49,12 +66,22 @@ version_control_subcommand_expand () {
            ;;
         a) echo $system add
            ;;
+        b) echo $system branch
+           ;;
         d) echo $system diff
+           ;;
+        f) case "$system" in
+                git)
+                   echo 'git_faff'
+                ;;
+                *) echo "fetch all fast-forward is not necessary beyond git" >&2; return 1
+                ;;
+           esac
            ;;
         w) case "$system" in
                 git) echo open $(get_github_repo_url) 
                 ;;
-                *) echo "Not known how to spot remote url in $system" >&2; exit 1
+                *) echo "Not known how to spot remote url in $system" >&2; return 1
                 ;;
            esac
            ;;
@@ -63,9 +90,11 @@ version_control_subcommand_expand () {
                 ;;
                 hg) echo $system revert --all
                 ;;
-                *) echo "Not known how to revert in $1" >&2; exit 1
+                *) echo "Not known how to revert in $1" >&2; return 1
                 ;;
            esac
+           ;;
+        FAIL) echo "Failing per user request" >&2; return 1
            ;;
         *) echo $system "$subcommand"
     esac
@@ -76,14 +105,18 @@ v () {
     [ -n "$subcommand" ] && shift
     if [ -n "$system" ]
     then
-        $show_v $(version_control_subcommand_expand "$system" "$subcommand" "$@") "$@"
-    else
-        echo "No version control system here" >&2
-        return 2
+        $show_v $(version_control_subcommand_expand "$system" "$subcommand" "$@" || echo 'echo Failed to expand version control subcommand') "$@"
+        return $?
     fi
+    echo "No version control system here" >&2
+    return 2
 }
 
 '+' () { v a "$@"; }
 
-[ "$0" = "$BASH_SOURCE" ] && v "$@"
-
+if [ "$0" = "$BASH_SOURCE" ]
+then
+    v "$@"
+else
+    true # ok to source functions
+fi
