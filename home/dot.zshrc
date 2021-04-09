@@ -1,5 +1,7 @@
-PROMPT=$'%B%n@%m %1~ %(?..%K{yellow}%?%k)%#%b '
+source "/usr/local/opt/zsh-git-prompt/zshrc.sh"
+PROMPT=$'%B%n@%m %1~ $(git_super_status)%(?..%K{yellow}%F{red}%?%f%k)%#%b '
 setopt autocd
+setopt rmstarsilent
 
 . "$HOME/.bash_utils/bin/v"
 . "$HOME/.bash_utils/source/aliases"
@@ -29,3 +31,11 @@ HISTFILE="$HIST_DIR/$(date "+%Y-%m-%d-%H%M%S")-$(basename "$TTY")-$$.history"
 
 zstyle ':completion:*:(ssh*|scp|rsync):*:users' hidden true
 autoload -Uz compinit && compinit -u
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "/usr/local/opt/nvm/nvm.sh" ] && . "/usr/local/opt/nvm/nvm.sh"  # This loads nvm
+# [ -s "/usr/local/opt/nvm/etc/bash_completion.d/nvm" ] && . "/usr/local/opt/nvm/etc/bash_completion.d/nvm"  # This loads nvm bash_completion
+
+export PATH="$HOME/bin:$PATH"
+
+export SECRETS_PINENTRY=ask
