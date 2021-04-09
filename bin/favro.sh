@@ -30,8 +30,9 @@ favro_id_of_widget_column () { # give widget name and column name
 
 favro_query_cards_of_widget_column () {
     COLUMN_ID=${COLUMN_ID:-$(favro_id_of_widget_column "$1" "$2")}
-    shift; shift
-    favro_query "cards?columnId=$COLUMN_ID" "$@"
+    FILTER="$3"
+    shift; shift; shift
+    favro_query "cards?columnId=$COLUMN_ID&$FILTER" "$@"
 }
 
 favro_do () {
