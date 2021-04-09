@@ -1,26 +1,33 @@
-alias ','='v st'
+alias '#'=true
+alias ,='v st'
 alias '?'='v st'
 alias '??'='v diff'
 alias '???'='v diff --staged'
-alias a='alias'
+alias a=alias
 alias act='echo */bin/activate | grep -qv "*" && . */bin/activate; if [ -d node_modules ] && ! echo ":$PATH:" | grep -q ":$PWD/node_modules/.bin:"; then export PATH="$PWD/node_modules/.bin:$PATH"; export PS1="$(basename "$PWD") $PS1"; fi'
 alias ald='source ~/.bash_utils/source/aliases'
-alias asv='alias > ~/.bash_utils/source/aliases'
+alias asv='a | sed "s/^/alias /" > ~/.bash_utils/source/aliases'
 alias ci='v commit'
 alias co='v checkout'
+alias d=docker
+alias dcm=docker-compose
 alias deact='echo */bin/deactivate | grep -qv "*" && . */bin/deactivate; export PATH=$(echo ":$PATH" | sed "s#:$PWD/[^:]*:#:#g; s#^:##") PS1=$(echo "$PS1" | sed "s#$(basename "$PWD") *##")'
-alias docker-machine='__docker_machine_wrapper'
 alias docker-undo='docker image rm $(docker image ls -q | head -n 1)'
 alias i='v i'
 alias l='v l'
 alias ll='ls -lart'
 alias npm2path='export PATH="$PWD/node_modules/.bin:$PATH"; echo $PATH'
 alias o='v o'
+alias pwgen='dd if=/dev/urandom bs=36 count=1 2>/dev/null | base64'
+alias run-help=man
 alias rvm-auto-off='chpwd_functions='
 alias rvm-auto-on='source "$HOME/.rvm/scripts/rvm"'
-alias rvm-restart='rvm_reload_flag=1 source '\''/Users/khal/.rvm/scripts/rvm'\'''
+alias rvm-restart='rvm_reload_flag=1 source '\''/Users/khal/.rvm/scripts/rvm'\'
 alias s='v s'
+alias sf='s --force-with-lease'
 alias st='v st'
 alias touchbar-restart='pkill "TouchBarAgent"'
 alias vd='v d'
 alias venv-temp='python3 -m venv /tmp/$USER-venv-$$ && . /tmp/$USER-venv-$$/bin/activate'
+alias which-command=whence
+alias yarn-wipe=$'yarn cache clean;\nrm -rf node_modules */{node_modules,dist,build} yarn.lock;\nyarn'
