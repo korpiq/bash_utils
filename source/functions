@@ -1,4 +1,8 @@
-pdfcompress() {
+#!/bin/bash
+
+c () { echo "$*" | bc -l; }
+
+pdfcompress () {
     if [ -z "$2" ]
     then
         echo "Usage: $0 infile outfile [screen*|ebook|printer|prepress]" >&2
@@ -7,3 +11,33 @@ pdfcompress() {
     gs -sDEVICE=pdfwrite -dNOPAUSE -dQUIET -dBATCH -dPDFSETTINGS=/${3:-screen} -dCompatibilityLevel=1.4 -sOutputFile="$2" "$1"
 }
 
+mount_vera () {
+    local NAME=${1//*\//}
+    local BARENAME=$(sed 's!\.[^/.]*$!!' <<<"/share/$NAME")
+    local DIR=$([ "$NAME" = "$1" ] && echo /share || dirname "$1")
+    if [ -f "$1" ]
+    then
+        local SOURCE="$1" TARGET="$DIR/$BARENAME"
+    else
+        local SOURCE="$DIR/.crypts/$NAME.veracrypt" TARGET="$DIR/$NAME"
+        for DIR in "$DIR/."*"/$NAME."*
+        do
+            [ -f "$DIR" ] && SOURCE="$DIR"
+        done
+    fi
+    mkdir -p "$TARGET"
+    sudo /usr/bin/veracrypt --text --mount --keyfiles="" --pim=0 --protect-hidden=no "$SOURCE" "$TARGET"
+}
+
+umount_vera () {
+    sudo /usr/bin/veracrypt --text --dismount "$@"
+}
+
+function git-pull-branch () {
+  local BRANCH="${1:-$(v default)}"
+  git pull origin "$BRANCH:$BRANCH"
+}
+
+function @ () {
+  git rebase "${1:-origin/$(v default)}"
+}
