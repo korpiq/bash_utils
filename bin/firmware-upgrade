@@ -1,0 +1,4 @@
+fwupdmgr refresh
+fwupdmgr get-updates
+fwupdmgr update
+# https://wiki.archlinux.org/title/fwupd
