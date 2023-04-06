@@ -1,0 +1,55 @@
+#!/bin/bash
+
+VERA_DIR="/share/.crypts"
+
+usage () {
+  cat >&2 <<__USAGE__
+$*
+Usage: [option|VAR=value ...] [--vera-option ...]
+Options:
+nnnX	VERA_SIZE nnn of X=[K/M/G]
+a_word	VERA_NAME filename
+path/x	VERA_DIR/VERA_NAME full filename with path
+__USAGE__
+  exit 1
+}
+
+while ! grep -q ^-- <<<"${1:---}"
+do
+    if grep -q '^[A-Z][A-Z_]*=' <<<"$1"
+    then
+        export "$1"
+    elif grep -q '^[0-9]*[MGK]' <<<"$1"
+    then
+	export "VERA_SIZE=$1"
+    elif grep -q '/' <<<"$1"
+    then
+        export "VERA_DIR=$(dirname $VERA_DIR)"
+	export "VERA_NAME=$(sed 's!.*/!!' <<<"$1")"
+    elif grep -q '^[a-z][a-z_-]*$' <<<"$1"
+    then
+        export "VERA_NAME=$1"
+    else
+        usage "Unknown parameter '$1'"
+    fi
+    shift
+done
+
+[ -n "$VERA_NAME" ] || usage "Please specify VERA_NAME."
+[ -n "$VERA_SIZE" ] || usage "Please specify VERA_SIZE."
+
+VERA_COMMAND=$(cat <<__SETTINGS__
+veracrypt --text
+--create $VERA_DIR/$VERA_NAME.veracrypt
+--size $VERA_SIZE
+--volume-type normal
+--encryption AES
+--hash sha-512
+--filesystem exfat
+--pim 0
+--random-source /dev/urandom
+__SETTINGS__
+)
+
+echo ${VERA_COMMAND} --keyfiles '' "$@"
+sudo ${VERA_COMMAND} --keyfiles '' "$@"
