@@ -42,7 +42,7 @@ git_faff() {
             git fetch $REMOTE $REMOTE_BRANCH:$LOCAL_BRANCH
         )
         then
-            [ "$1" = "--delete-missing" ] && git branch -d $LOCAL_BRANCH
+            [ -n "$1" ] && git branch "$1" $LOCAL_BRANCH
         fi
         done
 }
@@ -60,6 +60,16 @@ version_control_subcommand_expand () {
            ;;
         co|o) echo $system checkout
            ;;
+        lo)
+          case "$system" in
+              git)
+                branch="${1:-$(show_v= v default)}"
+                echo eval "git pull origin '${branch}:${branch}'; git checkout '${branch}'"
+              ;;
+              *) echo "pull-and-checkout probably not necessary for $system" >&2; return 1
+              ;;
+          esac
+          ;;
         st) echo $system status
            ;;
         am) echo $system commit --amend
@@ -94,6 +104,17 @@ version_control_subcommand_expand () {
                 ;;
            esac
            ;;
+        default)
+          case "$system" in
+              git)
+                echo echo "$(git symbolic-ref refs/remotes/origin/HEAD | sed 's%.*/%%')"
+              ;;
+              hg) echo echo default
+              ;;
+              *) echo "Default branch name not known for $system" >&2; return 1
+              ;;
+          esac
+          ;;
         FAIL) echo "Failing per user request" >&2; return 1
            ;;
         *) echo $system "$subcommand"
@@ -111,8 +132,6 @@ v () {
     echo "No version control system here" >&2
     return 2
 }
-
-'+' () { v a "$@"; }
 
 if [ "$0" = "$BASH_SOURCE" ]
 then
