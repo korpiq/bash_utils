@@ -1,6 +1,6 @@
-SHELL_UTILS_DIR=$(cd -- $(dirname $(dirname $(readlink "$BASH_SOURCE"))); pwd)
+SHELL_UTILS_DIR=$(cd -- $(dirname $(dirname $(readlink "$BASH_SOURCE" || echo "$BASH_SOURCE"))); pwd)
 
-for PATH_DIR in "$HOME/bin" "$HOME/.local/bin" "$SHELL_UTILS_DIR/bin"
+for PATH_DIR in "$HOME/bin" "$HOME/.local/bin" "$HOME/go/bin" "$SHELL_UTILS_DIR/bin"
 do
     # only add directories not yet in PATH and containing executables
     echo ":$PATH:" | grep -q ":$PATH_DIR:" ||
@@ -21,11 +21,7 @@ mkdir -p -m 0700 "$HOME/.history"
 history_rewrite () {
 	# combine histories:
 	"$SHELL_UTILS_DIR/bin/bash_history_sort.pl" "$HOME/.history/bash_history-"* > "$HOME/.bash_history"
-	# delay history loading to avoid timestamp mangling bug in bash 3.2
-	export PROMPT_COMMAND='
-		history -c; history -r "$HOME/.bash_history";
-		export PROMPT_COMMAND="history -a'$(echo ";$PROMPT_COMMAND;"|sed "s/; *history -a *;/;/; s/;;*/;/g")'"
-	'
+    history -r "$HOME/.bash_history"
 }
 
 export HISTFILE="$HOME/.history/bash_history-$(date +%F-%T)-$$"
@@ -38,3 +34,21 @@ history_rewrite
 which kubectl 2>&1 >/dev/null && source <(kubectl completion bash)
 [ -d "$HOME/.nvm" ] && export NVM_DIR="$HOME/.nvm"
 [ -f "/usr/local/opt/nvm/nvm.sh" ] && . "/usr/local/opt/nvm/nvm.sh"
+
+#AWSume alias to source the AWSume script
+alias awsume="source awsume"
+
+#Auto-Complete function for AWSume
+_awsume() {
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    opts=$(awsume-autocomplete)
+    COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+    return 0
+}
+complete -F _awsume awsume
+
+true
+
