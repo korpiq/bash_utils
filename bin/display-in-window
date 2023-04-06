@@ -1,0 +1,4 @@
+Xephyr :1 -screen 1200x960+1200+0 -title DEMO
+export DISPLAY=:1
+awesome &
+"$@"
