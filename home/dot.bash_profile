@@ -1,3 +1,4 @@
+[ -n "$DEBUG" ] && set -x
 SHELL_UTILS_DIR=$(cd -- $(dirname $(dirname $(readlink "$BASH_SOURCE" || echo "$BASH_SOURCE"))); pwd)
 
 for PATH_DIR in "$HOME/bin" "$HOME/.local/bin" "$HOME/go/bin" "$SHELL_UTILS_DIR/bin"
@@ -8,9 +9,13 @@ do
         export PATH="$PATH_DIR:$PATH"
 done
 
-for SOURCE_FILE in "$SHELL_UTILS_DIR/source"/* "$HOME/bin/"*/*.bash.inc
+for SOURCE_FILE in "$HOME/.bashrc" "$SHELL_UTILS_DIR/source"/* "$HOME/bin/"*/*.bash.inc
 do
-    [ -e "$SOURCE_FILE" ] && source "$SOURCE_FILE"
+    if [ -e "$SOURCE_FILE" ] && ! grep -q " $SOURCE_FILE " <<<" $SOURCED "
+    then
+        SOURCED="${SOURCED:+$SOURCED }$SOURCE_FILE"
+        source "$SOURCE_FILE"
+    fi
 done
 
 export HISTFILESIZE=262144
