@@ -33,12 +33,9 @@ umount_vera () {
     sudo /usr/bin/veracrypt --text --dismount "$@"
 }
 
-function @ () {
-  git rebase "${1:-origin/$(v default)}"
-}
+function @ () { git rebase "${1:-origin/$(v default)}"; }
+function - () { git restore --staged "$@"; }
 
 path_uniq () { local D P; while read D; do echo ":$P:" | grep -q ":$D" || P="$P:$D"; done <<<"$(sed 's/:/\n/g' <<<"$*")"; sed 's/^://' <<<"$P"; }
 
-idea () {
-    nohup < /dev/null &> /dev/null intellij-idea-ultimate "$@" &
-}
+idea () { nohup < /dev/null &> /dev/null intellij-idea-ultimate "$@" & }
