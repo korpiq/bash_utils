@@ -6,10 +6,32 @@ TARGET="$HOME/.bash_profile"
 
 [ -f "$TARGET" ] && mv "$TARGET" "$THIS_DIR/source/local_profile"
 
-for FILE in "$THIS_DIR/home/"*
+for FILE in $(cd "$THIS_DIR/home/"; find * -type f)
 do
-	TARGET="$HOME/$(basename "$FILE" | sed 's/^dot\././')"
-	[ -e "$TARGET" ] || ln -vs "$FILE" "$TARGET"
+	TARGET="$HOME/$(echo "$FILE" | sed 's/^dot\././')"
+    if [ -e "$TARGET" ]
+    then
+        echo "Skipping already existing '$TARGET'" >&2
+    else
+        echo "Linking '$TARGET' to '$THIS_DIR/home/$FILE'" >&2
+        TARGET_DIR="$(dirname "$TARGET")"
+        mkdir -vp "$TARGET_DIR"
+    	ln -vs "$THIS_DIR/home/$FILE" "$TARGET"
+    fi
+done
+
+for FILE in $(cd "$THIS_DIR/system/"; find * -type f)
+do
+	TARGET="/$(echo "$FILE" | sed 's/^dot\././')"
+    if [ -e "$TARGET" ]
+    then
+        echo "Skipping already existing '$TARGET'" >&2
+    else
+        TARGET_DIR="$(dirname "$TARGET")"
+        echo "Creating system file '$TARGET'" >&2
+        sudo install --verbose --backup -D -p --owner root "$THIS_DIR/system/$FILE" "$TARGET"
+    fi
 done
 
 mkdir -p -m 0700 "$HOME/.history"
+
