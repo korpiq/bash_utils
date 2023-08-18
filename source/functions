@@ -39,3 +39,9 @@ function - () { git restore --staged "$@"; }
 path_uniq () { local D P; while read D; do echo ":$P:" | grep -q ":$D" || P="$P:$D"; done <<<"$(sed 's/:/\n/g' <<<"$*")"; sed 's/^://' <<<"$P"; }
 
 idea () { nohup < /dev/null &> /dev/null intellij-idea-ultimate "$@" & }
+
+ok () {
+    CMD=$(git status | sed -ne 's/.*\(git [^ ]* --continue\).*/\1/p' | head -n 1)
+    [ -n "$CMD" ] && echo $CMD && $CMD
+}
+
