@@ -1,0 +1,11 @@
+#!/bin/bash
+
+source "$HOME/.bash_utils/source/functions"
+
+if mount | grep "$1"
+then
+  umount_vera "$@"
+else
+  mount_vera "$@"
+fi
+
