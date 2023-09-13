@@ -49,3 +49,35 @@ nx () {
   # redirecting stdout strips color. sed removes empty lines forced by nx.
   yarn nx "$@" 2> >(sed -ne '/./p' >&2) > /dev/null
 }
+
+google-chrome-find-profile () {
+  jq -r '
+    .profile.info_cache | 
+    to_entries | .[] | 
+    select(.value.user_name | test("'"$1"'")) | .key
+  ' ~/.config/google-chrome/Local\ State
+}
+
+google-chrome-open-profile () {
+  local EMAIL="$1"
+  shift
+  google-chrome --profile-directory="$(google-chrome-find-profile "$EMAIL")" "$@"
+}
+
+alias aws-clear='unset $(env | sed -ne "s/=.*//; /^AWS/p")'
+
+tiketti () {
+  warp-cli connect
+  aws-clear
+  export AWS_PROFILE=tiketti
+  source awsume $AWS_PROFILE
+}
+
+tiketti-development () {
+  warp-cli connect
+  aws-clear
+  export AWS_PROFILE=tiketti-development
+  google-chrome-open-profile kalle.hallivuori@tiketti.fi
+  aws sso login
+}
+
