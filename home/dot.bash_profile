@@ -1,5 +1,6 @@
 [ -n "$DEBUG" ] && set -x
 SHELL_UTILS_DIR=$(cd -- $(dirname $(dirname $(readlink "$BASH_SOURCE" || echo "$BASH_SOURCE"))); pwd)
+export LC_ALL=fi_FI.UTF-8
 
 for PATH_DIR in "$HOME/bin" "$HOME/.local/bin" "$HOME/go/bin" "$SHELL_UTILS_DIR/bin"
 do
@@ -35,7 +36,7 @@ history_rewrite
 
 [[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
 
-[ -f /usr/local/etc/bash_completion ] && . /usr/local/etc/bash_completion
+[ -f /etc/profile.d/bash_completion.sh ] && . /etc/profile.d/bash_completion.sh
 which kubectl 2>&1 >/dev/null && source <(kubectl completion bash)
 [ -d "$HOME/.nvm" ] && export NVM_DIR="$HOME/.nvm"
 [ -f "/usr/local/opt/nvm/nvm.sh" ] && . "/usr/local/opt/nvm/nvm.sh"
@@ -54,6 +55,9 @@ _awsume() {
     return 0
 }
 complete -F _awsume awsume
+
+. /usr/share/bash-completion/completions/git
+__git_complete co git_checkout
 
 true
 
