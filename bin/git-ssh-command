@@ -1,0 +1,3 @@
+#!/bin/bash
+
+ssh $(pwd | grep -q tiketti && echo -i $HOME/.ssh/id_tiketti) -o IdentitiesOnly=yes "$@"
