@@ -39,7 +39,7 @@ history_rewrite
 [ -f /etc/profile.d/bash_completion.sh ] && . /etc/profile.d/bash_completion.sh
 which kubectl 2>&1 >/dev/null && source <(kubectl completion bash)
 [ -d "$HOME/.nvm" ] && export NVM_DIR="$HOME/.nvm"
-[ -f "/usr/local/opt/nvm/nvm.sh" ] && . "/usr/local/opt/nvm/nvm.sh"
+[ -f "/usr/local/opt/nvm/nvm.sh" ] && . "/usr/local/opt/nvm/nvm.sh" --no-use # do not assume any version applies in general
 
 #AWSume alias to source the AWSume script
 alias awsume="source awsume"
