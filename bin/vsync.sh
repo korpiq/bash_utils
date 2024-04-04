@@ -38,7 +38,7 @@ then
   git fetch origin "$REMOTE_BRANCH"
   git checkout "$REMOTE_BRANCH"
   git pull
-  LOCAL_COMMIT=$(git -c "$LOCAL_DIR" rev-parse HEAD)
+  LOCAL_COMMIT=$(git -C "$LOCAL_DIR" rev-parse HEAD)
 fi
 
 if [ "$LOCAL_COMMIT" != "$REMOTE_COMMIT" ]
