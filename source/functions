@@ -43,6 +43,11 @@ ok () {
     [ -n "$CMD" ] && echo $CMD && $CMD
 }
 
+abort () {
+    CMD=$(git status | sed -ne 's/.*\(git [^ ]* --abort\).*/\1/p' | head -n 1)
+    [ -n "$CMD" ] && echo $CMD && $CMD
+}
+
 nx () {
   # redirecting stdout strips color. sed removes empty lines forced by nx.
   yarn nx "$@" 2> >(sed -ne '/./p' >&2) > /dev/null
