@@ -109,3 +109,5 @@ korpiq_prompt () {
     '\[\e[31;103m\]`echo '$EXIT' | grep -v ^0`\[\e[m\]\$ ' ' (%s)'
   return $EXIT
 }
+
+diff1rev() { ?? -r "$1^"  -r "$1"; }
