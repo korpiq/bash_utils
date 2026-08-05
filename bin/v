@@ -30,6 +30,18 @@ get_github_repo_url() {
     '
 }
 
+get_github_repo() {
+  git remote -v | sed 's/.*://; s/\.git .*//' | head -n 1
+}
+
+get_git_branch() {
+  git rev-parse --abbrev-ref HEAD
+}
+
+open_github_pr_url() {
+  gh pr view --web
+}
+
 git_faff() {
     git fetch --all;
     git branch --format '%(refname) %(upstream)' |
@@ -89,7 +101,14 @@ version_control_subcommand_expand () {
            esac
            ;;
         w) case "$system" in
-                git) echo open $(get_github_repo_url) 
+                git) echo open_github_pr_url
+                ;;
+                *) echo "Not known how to spot remote url in $system" >&2; return 1
+                ;;
+           esac
+           ;;
+        ww) case "$system" in
+                git) echo open $(get_github_repo_url)
                 ;;
                 *) echo "Not known how to spot remote url in $system" >&2; return 1
                 ;;
