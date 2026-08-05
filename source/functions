@@ -13,13 +13,14 @@ pdfcompress () {
 
 mount_vera () {
     local NAME=${1//*\//}
+    local TARGET=${2:-}
     local BARENAME=$(sed 's!\.[^/.]*$!!' <<<"/share/$NAME")
     local DIR=$([ "$NAME" = "$1" ] && echo /share || dirname "$1")
     if [ -f "$1" ]
     then
-        local SOURCE="$1" TARGET="$DIR/$BARENAME"
+        local SOURCE="$1" TARGET=${TARGET:-$DIR/$BARENAME}
     else
-        local SOURCE="$DIR/.crypts/$NAME.veracrypt" TARGET="$DIR/$NAME"
+        local SOURCE="$DIR/.crypts/$NAME.veracrypt" TARGET=${TARGET:-$DIR/$NAME}
         for DIR in "$DIR/."*"/$NAME."*
         do
             [ -f "$DIR" ] && SOURCE="$DIR"
