@@ -39,7 +39,10 @@ if [ -f "$STATE_DIR/apt-packages.txt" ] && [ -f "$STATE_DIR/apt-auto.txt" ]; the
     dpkg-query -f '${binary:Package}\n' -W > /tmp/current_pkg_list.txt
 
     # Find packages that exist in the backup but NOT on the current system
-    MISSING_PACKAGES=$(comm -23 <(sort /tmp/backup_pkg_list.txt) <(sort /tmp/current_pkg_list.txt))
+    # (LC_ALL=C: package names are plain ASCII, and comm requires its
+    # inputs sorted in the same collation it checks against — locale-aware
+    # sort/comm can disagree on order and abort with "not in sorted order")
+    MISSING_PACKAGES=$(LC_ALL=C comm -23 <(LC_ALL=C sort /tmp/backup_pkg_list.txt) <(LC_ALL=C sort /tmp/current_pkg_list.txt))
 
     if [ -n "$MISSING_PACKAGES" ]; then
         echo "--> Installing missing packages..."
@@ -52,7 +55,7 @@ if [ -f "$STATE_DIR/apt-packages.txt" ] && [ -f "$STATE_DIR/apt-auto.txt" ]; the
     # Safely mark auto-installed packages without altering existing states
     echo "--> Updating auto-installed package markers..."
     # Filter the auto list to only include packages that actually exist on the system right now
-    VALID_AUTO_PKGS=$(comm -12 <(sort "$STATE_DIR/apt-auto.txt") <(sort /tmp/current_pkg_list.txt))
+    VALID_AUTO_PKGS=$(LC_ALL=C comm -12 <(LC_ALL=C sort "$STATE_DIR/apt-auto.txt") <(LC_ALL=C sort /tmp/current_pkg_list.txt))
     if [ -n "$VALID_AUTO_PKGS" ]; then
         echo "$VALID_AUTO_PKGS" | xargs -r sudo apt-mark auto >/dev/null
     fi
