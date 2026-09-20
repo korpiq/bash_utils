@@ -1,0 +1,97 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# Define the state directory based on the current hostname or target hostname
+STATE_DIR="$HOME/.local/state/${HOSTNAME}"
+
+if [ ! -d "$STATE_DIR" ]; then
+    echo "Error: State directory not found at $STATE_DIR" >&2
+    exit 1
+fi
+
+echo "=================================================="
+echo " Starting System Restore from: $STATE_DIR"
+echo "=================================================="
+
+echo '=== 1. Restore repositories (PPAs and package sources)'
+if [ -d "$STATE_DIR/sources.list.d" ] || [ -f "$STATE_DIR/sources.list" ]; then
+    echo "--> Restoring APT repositories..."
+    sudo cp -b -r "$STATE_DIR"/sources.list* /etc/apt/
+    sudo apt-get update
+fi
+
+echo '=== 2. Restore APT (native) package lists (SAFE & ADDITIVE)'
+if [ -f "$STATE_DIR/apt-packages.txt" ] && [ -f "$STATE_DIR/apt-auto.txt" ]; then
+    echo "--> Calculating missing native APT packages..."
+
+    # Extract only the names of packages that were marked for installation in the backup
+    awk '$2 == "install" {print $1}' "$STATE_DIR/apt-packages.txt" > /tmp/backup_pkg_list.txt
+
+    # Generate a list of what is currently installed on this system
+    dpkg-query -f '${binary:Package}\n' -W > /tmp/current_pkg_list.txt
+
+    # Find packages that exist in the backup but NOT on the current system
+    MISSING_PACKAGES=$(comm -23 <(sort /tmp/backup_pkg_list.txt) <(sort /tmp/current_pkg_list.txt))
+
+    if [ -n "$MISSING_PACKAGES" ]; then
+        echo "--> Installing missing packages..."
+        # Install only the missing packages without touching existing ones
+        echo "$MISSING_PACKAGES" | xargs -r sudo apt-get install -y --no-upgrade
+    else
+        echo "--> All native packages from the backup are already installed."
+    fi
+
+    # Safely mark auto-installed packages without altering existing states
+    echo "--> Updating auto-installed package markers..."
+    # Filter the auto list to only include packages that actually exist on the system right now
+    VALID_AUTO_PKGS=$(comm -12 <(sort "$STATE_DIR/apt-auto.txt") <(sort /tmp/current_pkg_list.txt))
+    if [ -n "$VALID_AUTO_PKGS" ]; then
+        echo "$VALID_AUTO_PKGS" | xargs -r sudo apt-mark auto >/dev/null
+    fi
+
+    # Clean up temp files
+    rm -f /tmp/backup_pkg_list.txt /tmp/current_pkg_list.txt
+fi
+
+echo '=== 3. Restore Snap packages'
+if [ -f "$STATE_DIR/snap-packages.txt" ] && command -v snap >/dev/null; then
+    echo "--> Restoring Snap packages..."
+    # Skip the header line and read package names
+    awk 'NR>1 {print $1}' "$STATE_DIR/snap-packages.txt" | while read -r snap_name; do
+        if [ -n "$snap_name" ] && ! snap list "$snap_name" >/dev/null 2>&1; then
+            echo "Installing snap: $snap_name"
+            # Attempt standard install; classic snaps might require human intervention later
+            sudo snap install "$snap_name" || echo "Warning: Failed to install snap $snap_name automatically."
+        fi
+    done
+fi
+
+echo '=== 4. Restore Flatpak packages'
+if [ -f "$STATE_DIR/flatpak-packages.txt" ] && command -v flatpak >/dev/null; then
+    echo "--> Restoring Flatpak packages..."
+    # Read application IDs line by line
+    while read -r flatpak_id; do
+        if [ -n "$flatpak_id" ]; then
+            echo "Installing flatpak: $flatpak_id"
+            flatpak install -y flathub "$flatpak_id" || echo "Warning: Failed to install flatpak $flatpak_id"
+        fi
+    done < "$STATE_DIR/flatpak-packages.txt"
+fi
+
+echo '=== 5. Extract untracked custom binaries and configurations outside of /home'
+ARCHIVE_FILE="${STATE_DIR}/custom-sw.tar.gz"
+if [ -f "$ARCHIVE_FILE" ]; then
+    # Quick sanity check: verify tar size isn't just an empty skeleton archive (approx < 50 bytes)
+    if [ $(stat -c%s "$ARCHIVE_FILE") -gt 50 ]; then
+        echo "--> Restoring custom scripts and binaries to /usr/local, /opt, etc..."
+        sudo tar xzf "$ARCHIVE_FILE" -C /
+    else
+        echo "--> Custom software archive is empty. Skipping."
+    fi
+fi
+
+echo "=================================================="
+echo " Restore completed successfully!"
+echo " Recommended: Reboot the machine to apply all changes."
+echo "=================================================="
