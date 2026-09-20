@@ -45,9 +45,24 @@ if [ -f "$STATE_DIR/apt-packages.txt" ] && [ -f "$STATE_DIR/apt-auto.txt" ]; the
     MISSING_PACKAGES=$(LC_ALL=C comm -23 <(LC_ALL=C sort /tmp/backup_pkg_list.txt) <(LC_ALL=C sort /tmp/current_pkg_list.txt))
 
     if [ -n "$MISSING_PACKAGES" ]; then
-        echo "--> Installing missing packages..."
-        # Install only the missing packages without touching existing ones
-        echo "$MISSING_PACKAGES" | xargs -r sudo apt-get install -y --no-upgrade
+        # apt-get install aborts the whole batch if even one name doesn't
+        # resolve on this host (e.g. from a PPA that isn't set up here) —
+        # filter those out first instead of failing the entire step
+        INSTALLABLE=""
+        while read -r pkg; do
+            [ -n "$pkg" ] || continue
+            if apt-cache show "$pkg" >/dev/null 2>&1; then
+                INSTALLABLE="$INSTALLABLE$pkg"$'\n'
+            else
+                echo "--> Skipping $pkg: not available on this host (no matching repo here)"
+            fi
+        done <<<"$MISSING_PACKAGES"
+
+        if [ -n "$INSTALLABLE" ]; then
+            echo "--> Installing missing packages..."
+            # Install only the missing packages without touching existing ones
+            echo "$INSTALLABLE" | xargs -r sudo apt-get install -y --no-upgrade
+        fi
     else
         echo "--> All native packages from the backup are already installed."
     fi
