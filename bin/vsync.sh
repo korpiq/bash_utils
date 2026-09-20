@@ -14,7 +14,7 @@ get_version_command () {
   echo echo '$(git -C "'"$1"'" branch --show-current; git -C "'"$1"'" rev-parse HEAD)'
 }
 
-REMOTE_HOST="${1:-$(not_my_ip 192.168.0.246 192.168.0.222)}"
+REMOTE_HOST="${1:-$(not_my_ip 192.168.0.246 192.168.0.120)}"
 REMOTE_DIR="${2:-$PWD}"
 LOCAL_DIR="${3:-$PWD}"
 
