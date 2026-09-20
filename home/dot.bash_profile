@@ -1,5 +1,7 @@
 [ -n "$DEBUG" ] && set -x
-SHELL_UTILS_DIR=$(cd -- $(dirname $(dirname $(readlink "$BASH_SOURCE" || echo "$BASH_SOURCE"))); pwd)
+SHELL_UTILS_DIR=$(dirname $(dirname $(readlink "$BASH_SOURCE" || echo "$BASH_SOURCE")))
+[ "${SHELL_UTILS_DIR:0:1}" = "/" ] || SHELL_UTILS_DIR="$HOME/$SHELL_UTILS_DIR"
+SHELL_UTILS_DIR=$(cd -- "$SHELL_UTILS_DIR"; pwd)
 export LC_ALL=fi_FI.UTF-8
 
 for PATH_DIR in "$HOME/bin" "$HOME/.local/bin" "$HOME/go/bin" "$SHELL_UTILS_DIR/bin"
