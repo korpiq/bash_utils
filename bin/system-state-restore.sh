@@ -14,14 +14,21 @@ echo "=================================================="
 echo " Starting System Restore from: $STATE_DIR"
 echo "=================================================="
 
-echo '=== 1. Restore repositories (PPAs and package sources)'
+echo '=== 1. Restore apt keyrings'
+ARCHIVE_FILE="${STATE_DIR}/apt-keyrings.tar.gz"
+if [ -f "$ARCHIVE_FILE" ]; then
+    echo "--> Restoring apt keyrings (needed before apt-get update can verify added repos)..."
+    sudo tar xzf "$ARCHIVE_FILE" -C /
+fi
+
+echo '=== 2. Restore repositories (PPAs and package sources)'
 if [ -d "$STATE_DIR/sources.list.d" ] || [ -f "$STATE_DIR/sources.list" ]; then
     echo "--> Restoring APT repositories..."
     sudo cp -b -r "$STATE_DIR"/sources.list* /etc/apt/
     sudo apt-get update
 fi
 
-echo '=== 2. Restore APT (native) package lists (SAFE & ADDITIVE)'
+echo '=== 3. Restore APT (native) package lists (SAFE & ADDITIVE)'
 if [ -f "$STATE_DIR/apt-packages.txt" ] && [ -f "$STATE_DIR/apt-auto.txt" ]; then
     echo "--> Calculating missing native APT packages..."
 
@@ -54,7 +61,7 @@ if [ -f "$STATE_DIR/apt-packages.txt" ] && [ -f "$STATE_DIR/apt-auto.txt" ]; the
     rm -f /tmp/backup_pkg_list.txt /tmp/current_pkg_list.txt
 fi
 
-echo '=== 3. Restore Snap packages'
+echo '=== 4. Restore Snap packages'
 if [ -f "$STATE_DIR/snap-packages.txt" ] && command -v snap >/dev/null; then
     echo "--> Restoring Snap packages..."
     # Skip the header line and read package names
@@ -67,7 +74,7 @@ if [ -f "$STATE_DIR/snap-packages.txt" ] && command -v snap >/dev/null; then
     done
 fi
 
-echo '=== 4. Restore Flatpak packages'
+echo '=== 5. Restore Flatpak packages'
 if [ -f "$STATE_DIR/flatpak-packages.txt" ] && command -v flatpak >/dev/null; then
     echo "--> Restoring Flatpak packages..."
     # Read application IDs line by line
@@ -79,7 +86,7 @@ if [ -f "$STATE_DIR/flatpak-packages.txt" ] && command -v flatpak >/dev/null; th
     done < "$STATE_DIR/flatpak-packages.txt"
 fi
 
-echo '=== 5. Extract untracked custom binaries and configurations outside of /home'
+echo '=== 6. Extract untracked custom binaries and configurations outside of /home'
 ARCHIVE_FILE="${STATE_DIR}/custom-sw.tar.gz"
 if [ -f "$ARCHIVE_FILE" ]; then
     # Quick sanity check: verify tar size isn't just an empty skeleton archive (approx < 50 bytes)

@@ -6,19 +6,30 @@ STATE_DIR="$HOME/.local/state/${HOSTNAME}"
 
 mkdir -p "${STATE_DIR}"
 
-# 1. Export APT (native) package lists
+# 1. Export apt keyrings referenced by repo sources (Signed-By / signed-by=),
+#    so system-state-restore.sh can verify those repos before installing
+#    anything from them (apt-get update fails with NO_PUBKEY otherwise).
+KEYRING_FILES=$(
+    grep -rhoE '(Signed-By:|signed-by=)[[:space:]]*[^],[:space:]]+' \
+        /etc/apt/sources.list /etc/apt/sources.list.d/ 2>/dev/null |
+        sed -E 's/^(Signed-By:|signed-by=)[[:space:]]*//' |
+        sort -u
+)
+[ -z "$KEYRING_FILES" ] || tar czf "${STATE_DIR}/apt-keyrings.tar.gz" -T - <<<"$KEYRING_FILES"
+
+# 2. Export APT (native) package lists
 dpkg --get-selections > "${STATE_DIR}/apt-packages.txt"
 apt-mark showauto > "${STATE_DIR}/apt-auto.txt"
 
-# 2. Export Snap packages
+# 3. Export Snap packages
 ! command -v snap &>/dev/null ||
     snap list > "${STATE_DIR}/snap-packages.txt"
 
-# 3. Export Flatpak packages
+# 4. Export Flatpak packages
 ! command -v flatpak &>/dev/null ||
     flatpak list --columns=application > "${STATE_DIR}/flatpak-packages.txt"
 
-# 4. Export repositories (PPA keys and sources)
+# 5. Export repositories (PPA keys and sources)
 cp -r /etc/apt/sources.list* "${STATE_DIR}/"
 
 CUSTOM_SW=$(
