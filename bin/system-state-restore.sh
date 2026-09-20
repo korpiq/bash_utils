@@ -85,9 +85,12 @@ if [ -f "$STATE_DIR/snap-packages.txt" ] && command -v snap >/dev/null; then
     # Skip the header line and read package names
     awk 'NR>1 {print $1}' "$STATE_DIR/snap-packages.txt" | while read -r snap_name; do
         if [ -n "$snap_name" ] && ! snap list "$snap_name" >/dev/null 2>&1; then
-            echo "Installing snap: $snap_name"
-            # Attempt standard install; classic snaps might require human intervention later
-            sudo snap install "$snap_name" || echo "Warning: Failed to install snap $snap_name automatically."
+            CLASSIC_FLAG=""
+            if [ -f "$STATE_DIR/snap-classic.txt" ] && grep -qxF "$snap_name" "$STATE_DIR/snap-classic.txt"; then
+                CLASSIC_FLAG="--classic"
+            fi
+            echo "Installing snap: $snap_name${CLASSIC_FLAG:+ (--classic, as on the backed-up host)}"
+            sudo snap install "$snap_name" $CLASSIC_FLAG || echo "Warning: Failed to install snap $snap_name automatically."
         fi
     done
 fi

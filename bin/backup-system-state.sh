@@ -21,9 +21,14 @@ KEYRING_FILES=$(
 dpkg --get-selections > "${STATE_DIR}/apt-packages.txt"
 apt-mark showauto > "${STATE_DIR}/apt-auto.txt"
 
-# 3. Export Snap packages
-! command -v snap &>/dev/null ||
+# 3. Export Snap packages, plus which ones need --classic to reinstall
+#    (snap list's Notes column flags this; installing a classic snap
+#    without the flag fails interactively asking for it)
+if command -v snap &>/dev/null; then
     snap list > "${STATE_DIR}/snap-packages.txt"
+    awk 'NR>1 && $NF ~ /classic/ {print $1}' "${STATE_DIR}/snap-packages.txt" \
+        > "${STATE_DIR}/snap-classic.txt"
+fi
 
 # 4. Export Flatpak packages
 ! command -v flatpak &>/dev/null ||
