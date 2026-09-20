@@ -43,21 +43,6 @@ which kubectl 2>&1 >/dev/null && source <(kubectl completion bash)
 [ -d "$HOME/.nvm" ] && export NVM_DIR="$HOME/.nvm"
 [ -f "/usr/local/opt/nvm/nvm.sh" ] && . "/usr/local/opt/nvm/nvm.sh" --no-use # do not assume any version applies in general
 
-#AWSume alias to source the AWSume script
-alias awsume="source awsume"
-
-#Auto-Complete function for AWSume
-_awsume() {
-    local cur prev opts
-    COMPREPLY=()
-    cur="${COMP_WORDS[COMP_CWORD]}"
-    prev="${COMP_WORDS[COMP_CWORD-1]}"
-    opts=$(awsume-autocomplete)
-    COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
-    return 0
-}
-complete -F _awsume awsume
-
 . /usr/share/bash-completion/completions/git
 __git_complete co git_checkout
 
