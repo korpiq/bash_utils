@@ -89,8 +89,13 @@ if [ -f "$STATE_DIR/snap-packages.txt" ] && command -v snap >/dev/null; then
             if [ -f "$STATE_DIR/snap-classic.txt" ] && grep -qxF "$snap_name" "$STATE_DIR/snap-classic.txt"; then
                 CLASSIC_FLAG="--classic"
             fi
-            echo "Installing snap: $snap_name${CLASSIC_FLAG:+ (--classic, as on the backed-up host)}"
-            sudo snap install "$snap_name" $CLASSIC_FLAG || echo "Warning: Failed to install snap $snap_name automatically."
+            CHANNEL_FLAG=""
+            if [ -f "$STATE_DIR/snap-channels.txt" ]; then
+                channel=$(awk -v n="$snap_name" '$1==n{print $2; exit}' "$STATE_DIR/snap-channels.txt")
+                [ -z "$channel" ] || CHANNEL_FLAG="--channel=$channel"
+            fi
+            echo "Installing snap: $snap_name${CHANNEL_FLAG:+ (channel: $channel)}${CLASSIC_FLAG:+ (--classic, as on the backed-up host)}"
+            sudo snap install "$snap_name" $CLASSIC_FLAG $CHANNEL_FLAG || echo "Warning: Failed to install snap $snap_name automatically."
         fi
     done
 fi

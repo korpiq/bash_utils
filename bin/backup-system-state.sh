@@ -23,11 +23,20 @@ apt-mark showauto > "${STATE_DIR}/apt-auto.txt"
 
 # 3. Export Snap packages, plus which ones need --classic to reinstall
 #    (snap list's Notes column flags this; installing a classic snap
-#    without the flag fails interactively asking for it)
+#    without the flag fails interactively asking for it) and each one's
+#    tracking channel (snap list truncates branch-suffixed channels like
+#    latest/stable/ubuntu-26.04 with '…', so query snap info per package
+#    instead; installing without the exact channel can silently land on
+#    a different, e.g. older, revision than what's actually running)
 if command -v snap &>/dev/null; then
     snap list > "${STATE_DIR}/snap-packages.txt"
     awk 'NR>1 && $NF ~ /classic/ {print $1}' "${STATE_DIR}/snap-packages.txt" \
         > "${STATE_DIR}/snap-classic.txt"
+    : > "${STATE_DIR}/snap-channels.txt"
+    awk 'NR>1 {print $1}' "${STATE_DIR}/snap-packages.txt" | while read -r snap_name; do
+        channel=$(snap info "$snap_name" 2>/dev/null | awk '/^tracking:/{print $2}')
+        [ -z "$channel" ] || echo "$snap_name $channel" >> "${STATE_DIR}/snap-channels.txt"
+    done
 fi
 
 # 4. Export Flatpak packages
