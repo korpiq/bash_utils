@@ -1,0 +1,36 @@
+#!/bin/bash
+# Create a new encrypted file container, format a filesystem inside it, and mount it.
+set -euo pipefail
+
+usage() {
+    echo "Usage: $0 NAME SIZE_GIB" >&2
+    exit 1
+}
+
+[ $# -eq 2 ] || usage
+readonly NAME="$1"
+readonly SIZE_GIB="$2"
+
+MOUNT_BASE="${MOUNT_BASE:-/data}"                # mount root; default matches the LUKS2-encrypted btrfs @data subvolume already used for these containers
+CRYPTS_DIR="${CRYPTS_DIR:-$MOUNT_BASE/.crypts}"  # container-file dir; kept under MOUNT_BASE by default so both travel together
+CRYPTTYPE="${CRYPTTYPE:-luks2}"                  # cryptsetup format type, also used as the container file's extension; LUKS2 replaces VeraCrypt (todo#22)
+FSTYPE="${FSTYPE:-ext4}"                         # filesystem inside the container; ext4 over btrfs keeps the sparse container file sparse (no CoW block relocation)
+
+readonly IMG="${CRYPTS_DIR}/${NAME}.${CRYPTTYPE}"
+readonly MOUNTPOINT="${MOUNT_BASE}/${NAME}"
+readonly HEADER_BACKUP="${CRYPTS_DIR}/${NAME}.${CRYPTTYPE}-header-backup"
+
+[ -e "$IMG" ] && { echo "Already exists: $IMG" >&2; exit 1; }
+
+mkdir -p "${CRYPTS_DIR}"
+truncate -s "${SIZE_GIB}G" "${IMG}"
+sudo cryptsetup luksFormat --type "${CRYPTTYPE}" "${IMG}"
+sudo cryptsetup open "${IMG}" "${NAME}"
+sudo "mkfs.${FSTYPE}" -q "/dev/mapper/${NAME}"
+sudo mkdir -p "${MOUNTPOINT}"
+sudo mount "/dev/mapper/${NAME}" "${MOUNTPOINT}"
+sudo chown "$(id -u):$(id -g)" "${MOUNTPOINT}"
+sudo cryptsetup luksHeaderBackup "${IMG}" --header-backup-file "${HEADER_BACKUP}"
+
+echo "Created ${IMG}, mounted at ${MOUNTPOINT}."
+echo "Header backup at ${HEADER_BACKUP} — copy it somewhere other than ${CRYPTS_DIR}."

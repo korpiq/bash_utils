@@ -1,0 +1,16 @@
+#!/bin/bash
+# Unmount and close an open encrypted file container by name.
+set -euo pipefail
+
+usage() {
+    echo "Usage: $0 NAME" >&2
+    exit 1
+}
+
+[ $# -eq 1 ] || usage
+readonly NAME="$1"
+
+MOUNT_BASE="${MOUNT_BASE:-/data}"  # mount root; must match what crypt-mount used to open this container
+
+sudo umount "${MOUNT_BASE}/${NAME}"
+sudo cryptsetup close "${NAME}"

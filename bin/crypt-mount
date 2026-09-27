@@ -1,0 +1,24 @@
+#!/bin/bash
+# Open and mount an existing encrypted file container by name.
+set -euo pipefail
+
+usage() {
+    echo "Usage: $0 NAME" >&2
+    exit 1
+}
+
+[ $# -eq 1 ] || usage
+readonly NAME="$1"
+
+MOUNT_BASE="${MOUNT_BASE:-/data}"                # mount root; must match what crypt-create used for this container
+CRYPTS_DIR="${CRYPTS_DIR:-$MOUNT_BASE/.crypts}"  # container-file dir; must match what crypt-create used for this container
+
+readonly MOUNTPOINT="${MOUNT_BASE}/${NAME}"
+
+IMG=$(find "${CRYPTS_DIR}" -maxdepth 1 -name "${NAME}.*" -not -name '*.header-backup' 2>/dev/null | head -n1)
+[ -n "$IMG" ] || { echo "No container found for '${NAME}' in ${CRYPTS_DIR}" >&2; exit 1; }
+
+sudo cryptsetup open "${IMG}" "${NAME}"
+sudo mkdir -p "${MOUNTPOINT}"
+sudo mount "/dev/mapper/${NAME}" "${MOUNTPOINT}"
+echo "Mounted at ${MOUNTPOINT}"
