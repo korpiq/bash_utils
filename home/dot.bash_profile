@@ -27,9 +27,29 @@ export HISTTIMEFORMAT="%F-%T "
 mkdir -p -m 0700 "$HOME/.history"
 
 history_rewrite () {
-	# combine histories:
-	"$SHELL_UTILS_DIR/bin/bash_history_sort.pl" "$HOME/.history/bash_history-"* > "$HOME/.bash_history"
-    history -r "$HOME/.bash_history"
+	local HISTORY_LOCK="$HOME/.history/.lock"
+
+	# combine histories, but only if nobody else is already doing it right
+	# now (non-blocking): with several terminals launched at once at login,
+	# there's no point in each of them redoing the same merge in turn
+	(
+		flock -x -n 200 || exit 0
+		"$SHELL_UTILS_DIR/bin/bash_history_sort.pl" "$HOME/.history/bash_history-"* > "$HOME/.bash_history"
+	) 200>"$HISTORY_LOCK"
+
+	# then wait for whichever session is writing (ourselves or another) to
+	# finish before reading, so we never load a partially-written file: a
+	# shared lock blocks only against the exclusive writer above, not
+	# against other readers. Held in this shell, not a subshell, so
+	# `history -r` affects our own session's in-memory history.
+	exec 201>"$HISTORY_LOCK"
+	if flock -s -w 30 201
+	then
+		history -r "$HOME/.bash_history"
+	else
+		echo >&2 "history_rewrite: timed out waiting for history merge, skipping"
+	fi
+	exec 201>&-
 }
 
 export HISTFILE="$HOME/.history/bash_history-$(date +%F-%T)-$$"
