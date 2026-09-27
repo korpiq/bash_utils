@@ -8,7 +8,7 @@ usage() {
 }
 
 [ $# -eq 1 ] || usage
-readonly NAME="$1"
+readonly NAME="$(basename "${1%.*}")"  # tolerate a container path, not just the bare name
 
 MOUNT_BASE="${MOUNT_BASE:-/data}"                # mount root; must match what crypt-create used for this container
 CRYPTS_DIR="${CRYPTS_DIR:-$MOUNT_BASE/.crypts}"  # container-file dir; must match what crypt-create used for this container
