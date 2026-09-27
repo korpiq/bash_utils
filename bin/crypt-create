@@ -24,7 +24,7 @@ readonly HEADER_BACKUP="${CRYPTS_DIR}/${NAME}.${CRYPTTYPE}-header-backup"
 
 mkdir -p "${CRYPTS_DIR}"
 truncate -s "${SIZE_GIB}G" "${IMG}"
-sudo cryptsetup luksFormat --type "${CRYPTTYPE}" "${IMG}"
+sudo cryptsetup luksFormat --batch-mode --type "${CRYPTTYPE}" "${IMG}"
 sudo cryptsetup open "${IMG}" "${NAME}"
 sudo "mkfs.${FSTYPE}" -q "/dev/mapper/${NAME}"
 sudo mkdir -p "${MOUNTPOINT}"
