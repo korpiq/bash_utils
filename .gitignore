@@ -1,3 +1,4 @@
 source/secrets
 source/local_profile
 .idea
+*.pem

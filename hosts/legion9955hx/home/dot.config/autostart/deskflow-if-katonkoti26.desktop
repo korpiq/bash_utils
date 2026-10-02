@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Deskflow (if katonkoti26 serves)
+Comment=Start Deskflow client when katonkoti26 runs a Deskflow server
+Exec=/home/kato/.local/bin/deskflow-if-katonkoti26
+Icon=org.deskflow.deskflow
+Terminal=false
+X-KDE-autostart-phase=2
