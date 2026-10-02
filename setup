@@ -1,37 +1,48 @@
 #!/bin/bash
 
 THIS_DIR=$(cd $(dirname "$BASH_SOURCE"); pwd)
+HOST_DIR="$THIS_DIR/hosts/$(hostname)"
 
 TARGET="$HOME/.bash_profile"
 
-[ -f "$TARGET" ] && mv "$TARGET" "$THIS_DIR/source/local_profile"
+[ -f "$TARGET" ] && [ ! -L "$TARGET" ] && mv "$TARGET" "$THIS_DIR/source/local_profile"
 
-for FILE in $(cd "$THIS_DIR/home/"; find * -type f)
-do
-	TARGET="$HOME/$(echo "$FILE" | sed 's/^dot\././')"
-    if [ -e "$TARGET" ]
-    then
-        echo "Skipping already existing '$TARGET'" >&2
-    else
-        echo "Linking '$TARGET' to '$THIS_DIR/home/$FILE'" >&2
-        TARGET_DIR="$(dirname "$TARGET")"
-        mkdir -vp "$TARGET_DIR"
-    	ln -vs "$THIS_DIR/home/$FILE" "$TARGET"
-    fi
-done
+# Link files under $1 into $HOME, "dot." prefixes becoming ".".
+link_home () {
+    [ -d "$1" ] || return 0
+    for FILE in $(cd "$1"; find * -type f)
+    do
+        TARGET="$HOME/$(echo "$FILE" | sed 's/^dot\././')"
+        if [ -e "$TARGET" ]
+        then
+            echo "Skipping already existing '$TARGET'" >&2
+        else
+            echo "Linking '$TARGET' to '$1/$FILE'" >&2
+            mkdir -vp "$(dirname "$TARGET")"
+            ln -vs "$1/$FILE" "$TARGET"
+        fi
+    done
+}
 
-for FILE in $(cd "$THIS_DIR/system/"; find * -type f)
-do
-	TARGET="/$(echo "$FILE" | sed 's/^dot\././')"
-    if [ -e "$TARGET" ]
-    then
-        echo "Skipping already existing '$TARGET'" >&2
-    else
-        TARGET_DIR="$(dirname "$TARGET")"
-        echo "Creating system file '$TARGET'" >&2
-        sudo install --verbose --backup -D -p --owner root "$THIS_DIR/system/$FILE" "$TARGET"
-    fi
-done
+# Install files under $1 into /, "dot." prefixes becoming ".".
+install_system () {
+    [ -d "$1" ] || return 0
+    for FILE in $(cd "$1"; find * -type f)
+    do
+        TARGET="/$(echo "$FILE" | sed 's/^dot\././')"
+        if [ -e "$TARGET" ]
+        then
+            echo "Skipping already existing '$TARGET'" >&2
+        else
+            echo "Creating system file '$TARGET'" >&2
+            sudo install --verbose --backup -D -p --owner root "$1/$FILE" "$TARGET"
+        fi
+    done
+}
+
+link_home "$THIS_DIR/home"
+link_home "$HOST_DIR/home"
+install_system "$THIS_DIR/system"
+install_system "$HOST_DIR/system"
 
 mkdir -p -m 0700 "$HOME/.history"
-
