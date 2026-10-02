@@ -2,6 +2,18 @@
 
 set -euo pipefail
 
+HOST_SPECIFIC_DIR="${HOST_SPECIFIC_DIR:-$HOME/omat/kato-private-agent-rules/common-rules/host-specific}"
+SYNC_HOSTS="${SYNC_HOSTS:-legion9955hx katonkoti26}"
+
+home_ips () {
+  for HOST in $SYNC_HOSTS
+  do
+    FILE="$HOST_SPECIFIC_DIR/$HOST/ip-address-at-home.txt"
+    [ -r "$FILE" ] || { echo "Missing $FILE" >&2; return 1; }
+    cat "$FILE"
+  done
+}
+
 not_my_ip () {
   for IP in "$@"
   do
@@ -14,7 +26,14 @@ get_version_command () {
   echo echo '$(git -C "'"$1"'" branch --show-current; git -C "'"$1"'" rev-parse HEAD)'
 }
 
-REMOTE_HOST="${1:-$(not_my_ip 192.168.0.246 192.168.0.120)}"
+if [ -n "${1:-}" ]
+then
+  REMOTE_HOST="$1"
+else
+  HOME_IPS=$(home_ips)
+  # shellcheck disable=SC2086
+  REMOTE_HOST=$(not_my_ip $HOME_IPS)
+fi
 REMOTE_DIR="${2:-$PWD}"
 LOCAL_DIR="${3:-$PWD}"
 
