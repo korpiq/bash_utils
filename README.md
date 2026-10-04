@@ -17,12 +17,12 @@ installed like `home` and `system`, but only on the host named
 
     ./setup-keyd
 
-Installs [keyd](https://github.com/rvaiya/keyd) and `system/etc/keyd/default.conf` as `/etc/keyd/default.conf`, and restarts the service. On KDE it also removes the `caps:` option from the keyboard layout options in `kxkbrc`, so that KDE does not remap what keyd emits. Log out and in for that to take effect.
+Installs [keyd](https://github.com/rvaiya/keyd) and `system/etc/keyd/default.conf` as `/etc/keyd/default.conf`, and restarts the service. On KDE it also removes the `caps:` option from the keyboard layout options in `kxkbrc`, so that KDE does not remap what keyd emits. Log out and in for that to take effect; until then KDE keeps applying the old option and Caps Lock misbehaves.
 
 Key mappings:
 
 - Caps Lock and Right Control: Escape when tapped, Control when held.
 - Pause: Tab, for tabbing while typing on the numpad.
-- Shift+Caps Lock: meant to toggle Caps Lock; currently it swallows the next typed letter instead.
+- Shift+Caps Lock: toggles Caps Lock.
 
 keyd works under Wayland, X11, and the console.
