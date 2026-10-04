@@ -1,0 +1,21 @@
+#!/bin/bash
+# Install keyd and its configuration (system/etc/keyd/default.conf): remaps
+# Caps Lock and Right Control to Escape when tapped and Control when held,
+# Shift+Caps Lock to Caps Lock, and Pause to Tab.
+
+set -euo pipefail
+
+THIS_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)
+
+sudo apt-get install -y keyd
+sudo install --verbose --backup -D -m 644 "$THIS_DIR/system/etc/keyd/default.conf" /etc/keyd/default.conf
+sudo systemctl enable keyd
+sudo systemctl restart keyd
+
+# On KDE, its own Caps Lock option must not remap the Caps Lock keyd emits for Shift+Caps Lock.
+if command -v kreadconfig6 >/dev/null
+then
+    CURRENT=$(kreadconfig6 --file kxkbrc --group Layout --key Options)
+    WANTED=$(echo "$CURRENT" | tr ',' '\n' | { grep -v '^caps:' || true; } | paste -sd,)
+    kwriteconfig6 --file kxkbrc --group Layout --key Options "$WANTED"
+fi
