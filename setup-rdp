@@ -13,4 +13,9 @@ do
     ln -sfv "$SRC/$FILE" "$DEST/$FILE"
 done
 
+# The Remmina snap cannot read dotfiles under $HOME, so it needs its own copy.
+SNAP_DIR="$HOME/snap/remmina/current/.local/share/remmina"
+mkdir -p "$SNAP_DIR"
+cp -v "$SRC/remmina/legion.remmina" "$SNAP_DIR/"
+
 command -v remmina >/dev/null || echo "remmina is not installed: sudo apt install remmina remmina-plugin-rdp" >&2
