@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Legion (Remmina)
+Comment=Connect to legion9955hx over RDP
+Exec=sh -c 'exec remmina -c "$HOME/.local/share/remmina/legion.remmina"'
+Icon=org.remmina.Remmina
+Categories=Network;RemoteAccess;

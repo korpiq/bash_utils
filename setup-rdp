@@ -1,0 +1,16 @@
+#!/bin/bash
+# Links the Remmina profile and launcher for connecting to legion9955hx.
+# Run on katonkoti26.
+set -euo pipefail
+
+THIS_DIR=$(cd "$(dirname "$BASH_SOURCE")"; pwd)
+SRC="$THIS_DIR/hosts/katonkoti26/home/dot.local/share"
+DEST="$HOME/.local/share"
+
+for FILE in remmina/legion.remmina applications/legion-remote.desktop
+do
+    mkdir -p "$DEST/$(dirname "$FILE")"
+    ln -sfv "$SRC/$FILE" "$DEST/$FILE"
+done
+
+command -v remmina >/dev/null || echo "remmina is not installed: sudo apt install remmina remmina-plugin-rdp" >&2
