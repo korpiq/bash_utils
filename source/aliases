@@ -42,6 +42,7 @@ alias monitors-scale='xrandr -q | perl -wne '\''my ($n,$x,$y) = (/^(\S+) connect
 alias npm2path='export PATH="$PWD/node_modules/.bin:$PATH"; echo $PATH'
 alias o='v o'
 alias pbcopy-from-mac='ssh korpiq@10.5.7.101 pbpaste | xclip -i -selection clipboard'
+alias prod='gcloud compute ssh --ssh-key-file=~/.ssh/id_one4all_prod --tunnel-through-iap --project=one4allcloudservers1 --zone=europe-north1-a kalle@one4all-compute-ng'
 alias pwgen='dd if=/dev/urandom bs=36 count=1 2>/dev/null | base64'
 alias run-help='man'
 alias rvm-auto-off='chpwd_functions='
