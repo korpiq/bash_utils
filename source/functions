@@ -112,3 +112,7 @@ korpiq_prompt () {
 }
 
 diff1rev() { ?? -r "$1^"  -r "$1"; }
+
+mdhtml () {
+  python3 -c 'import sys; from markdown_it import MarkdownIt; print(MarkdownIt("gfm-like").render(open(sys.argv[1]).read()))' "$1"
+}
